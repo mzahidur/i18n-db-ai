@@ -1,1 +1,53 @@
-<!-- domain pom.xml content -->
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.mzahidur</groupId>
+        <artifactId>i18n-db-ai-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>i18n-db-ai-domain</artifactId>
+    <packaging>jar</packaging>
+
+    <name>i18n-db-ai :: Domain</name>
+    <description>
+        Core domain model, ports (interfaces), and domain exceptions.
+        This module has NO framework dependencies — pure Java + JPA annotations only.
+        Dependency rule: nothing outside this module may be imported here.
+    </description>
+
+    <dependencies>
+
+        <!--
+            JPA API only (annotations: @Entity, @Embeddable, @Column, etc.)
+            Provided at runtime by the infrastructure module's JPA starter.
+            Kept here so the domain entity compiles without pulling in an ORM.
+        -->
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ── Test ──────────────────────────────────────────────────────── -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>
