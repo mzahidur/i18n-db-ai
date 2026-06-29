@@ -1,0 +1,62 @@
+# Maven build output
+target/
+*/target/
+
+# IntelliJ IDEA / Eclipse / VSCode project files
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.vscode/
+
+# Logs
+*.log
+*.pid
+hs_err_pid*
+replay_pid*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Package archives
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Backup / temp files
+*.bak
+*.swp
+*.swo
+*~
+*.tmp
+
+# Generated metadata
+.mvn/
+dependency-reduced-pom.xml
+
+# Test coverage / reports
+.coverage/
+coverage/
+jacoco.exec
+surefire-reports/
+test-output/
+
+# Flyway / Liquibase migration artifacts
+flyway.conf
+liquibase.properties
+
+# Redis / cache dumps
+dump.rdb
+
+# AI / secrets
+.env
+.env.*
+*.key
+*.secret
