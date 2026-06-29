@@ -55,7 +55,7 @@ liquibase.properties
 # Redis / cache dumps
 dump.rdb
 
-# AI / secrets
+# Environment / secrets
 .env
 .env.*
 *.key
