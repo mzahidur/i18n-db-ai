@@ -7,7 +7,7 @@
     <parent>
         <groupId>io.github.mzahidur</groupId>
         <artifactId>i18n-db-ai</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -95,16 +95,19 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-openai</artifactId>
+            <version>2.0.0</version>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-spring-boot-starter</artifactId>
+            <version>1.0.0-beta3</version>  <!-- or latest stable -->
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
+            <version>1.0.0-beta3</version>
             <optional>true</optional>
         </dependency>
 

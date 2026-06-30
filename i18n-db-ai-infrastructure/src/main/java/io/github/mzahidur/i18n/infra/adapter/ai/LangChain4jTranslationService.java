@@ -56,7 +56,7 @@ public class LangChain4jTranslationService implements AiTranslationPort {
         String prompt = buildPrompt(sourceText, sourceLocale, targetLocale, context);
 
         try {
-            String response = model.generate(prompt);
+            String response = model.chat(prompt);
 
             if (response == null || response.isBlank()) {
                 log.warn("LangChain4j returned blank response for sourceLocale='{}' targetLocale='{}'",
