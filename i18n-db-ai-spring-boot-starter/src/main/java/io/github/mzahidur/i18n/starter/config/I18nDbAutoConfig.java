@@ -1,14 +1,13 @@
-package io.github.mzahidur.i18n.starter;
+package io.github.mzahidur.i18n.starter.config;
 
-import io.github.mzahidur.i18n.application.service.AiTranslationProvider;
-import io.github.mzahidur.i18n.application.service.DbTranslationProvider;
-import io.github.mzahidur.i18n.application.service.DefaultCacheKeyResolver;
-import io.github.mzahidur.i18n.application.service.PropertiesTranslationProvider;
-import io.github.mzahidur.i18n.application.service.TenantAwareCacheKeyResolver;
-import io.github.mzahidur.i18n.application.service.TranslationApplicationService;
-import io.github.mzahidur.i18n.application.service.TranslationCacheManager;
-import io.github.mzahidur.i18n.application.service.TranslationChain;
-import io.github.mzahidur.i18n.application.service.TranslationProvider;
+import io.github.mzahidur.i18n.application.service.provider.AiTranslationProvider;
+import io.github.mzahidur.i18n.application.service.provider.DbTranslationProvider;
+import io.github.mzahidur.i18n.application.service.provider.PropertiesTranslationProvider;
+import io.github.mzahidur.i18n.application.service.provider.TranslationProvider;
+import io.github.mzahidur.i18n.application.service.cache.DefaultCacheKeyResolver;
+import io.github.mzahidur.i18n.application.service.cache.TenantAwareCacheKeyResolver;
+import io.github.mzahidur.i18n.application.service.cache.TranslationCacheManager;
+import io.github.mzahidur.i18n.application.service.chain.TranslationChain;
 import io.github.mzahidur.i18n.domain.port.AiTranslationPort;
 import io.github.mzahidur.i18n.domain.port.CacheKeyResolver;
 import io.github.mzahidur.i18n.domain.port.CachePort;
@@ -116,20 +115,20 @@ public class I18nDbAutoConfig {
     // Fallback chain providers
     // =========================================================================
 
-    @Bean
-    @ConditionalOnMissingBean(DbTranslationProvider.class)
+    @Bean("dbTranslationProvider")
+    @ConditionalOnMissingBean(name = "dbTranslationProvider")
     public TranslationProvider dbTranslationProvider(TranslationRepositoryPort repository) {
         return new DbTranslationProvider(repository);
     }
 
-    @Bean
-    @ConditionalOnMissingBean(PropertiesTranslationProvider.class)
+    @Bean("propertiesTranslationProvider")
+    @ConditionalOnMissingBean(name = "propertiesTranslationProvider")
     public TranslationProvider propertiesTranslationProvider(PropertiesMessageSourcePort messageSourcePort) {
         return new PropertiesTranslationProvider(messageSourcePort);
     }
 
-    @Bean
-    @ConditionalOnMissingBean(AiTranslationProvider.class)
+    @Bean("aiTranslationProvider")
+    @ConditionalOnMissingBean(name = "aiTranslationProvider")
     public TranslationProvider aiTranslationProvider(AiTranslationPort aiPort,
                                                       TranslationRepositoryPort repository,
                                                       I18nDbProperties properties) {
@@ -172,8 +171,10 @@ public class I18nDbAutoConfig {
     @Bean
     @Primary
     @ConditionalOnMissingBean(name = "databaseMessageSource")
-    public MessageSource databaseMessageSource(TranslationApplicationService service) {
-        return new DatabaseMessageSource(service);
+    public MessageSource databaseMessageSource(
+            TranslationApplicationService service,
+            @Autowired(required = false) TenantIdResolver tenantIdResolver) {
+        return new DatabaseMessageSource(service, tenantIdResolver);
     }
 
     // =========================================================================
@@ -223,7 +224,7 @@ public class I18nDbAutoConfig {
             case "oracle"     -> "classpath:db/migration/oracle";
             case "postgresql" -> "classpath:db/migration/postgresql";
             case "sqlserver"  -> "classpath:db/migration/sqlserver";
-            default           -> "classpath:db/migration";  // root = ANSI / H2
+            default           -> "classpath:db/migration/common";
         };
     }
 }
