@@ -6,11 +6,12 @@
 
     <groupId>io.github.mzahidur</groupId>
     <artifactId>i18n-db-ai</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <name>i18n-db-ai</name>
     <description>Multilingual DB + AI Translation Library</description>
+    <url>https://github.com/mzahidur/i18n-db-ai</url>
 
     <modules>
         <module>i18n-db-ai-domain</module>
@@ -19,260 +20,113 @@
         <module>i18n-db-ai-spring-boot-starter</module>
     </modules>
 
-    <!-- ── Properties ─────────────────────────────────────────────────────── -->
     <properties>
         <java.version>17</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <spring.boot.version>3.3.4</spring.boot.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <!-- Library versions — single source of truth for the whole reactor -->
-        <spring-boot.version>3.3.0</spring-boot.version>
-        <spring-ai.version>2.0.0-RC2</spring-ai.version>
-        <langchain4j.version>0.31.0</langchain4j.version>
-        <flyway.version>12.8.1</flyway.version>
-        <caffeine.version>3.2.4</caffeine.version>
-        <junit-jupiter.version>5.11.0</junit-jupiter.version>
-        <assertj.version>3.25.3</assertj.version>
-        <mockito.version>5.11.0</mockito.version>
-        <testcontainers.version>1.19.8</testcontainers.version>
     </properties>
 
-    <!-- ── Dependency Management (BOM) ───────────────────────────────────── -->
-    <!--
-        Every dependency used by ANY child module must have its version
-        resolved from exactly one place: here. Child poms must never declare
-        a <version> directly — if a build error says "version is missing",
-        the fix belongs in this block, not in the child pom.
-    -->
     <dependencyManagement>
         <dependencies>
-
-            <!-- Spring Boot BOM — aligns all Spring/JPA/Redis/test versions -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
+                <version>${spring.boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
-            <!--
-                Spring AI BOM — Spring Boot's BOM does NOT manage Spring AI
-                artifact versions; Spring AI ships its own BOM and it must
-                be imported separately.
-            -->
-            <dependency>
-                <groupId>org.springframework.ai</groupId>
-                <artifactId>spring-ai-bom</artifactId>
-                <version>${spring-ai.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- ── Internal modules ──────────────────────────────────────── -->
-            <!--
-                Lets every child pom depend on a sibling module with just
-                groupId+artifactId — no <version> repeated everywhere.
-            -->
-            <dependency>
-                <groupId>io.github.mzahidur</groupId>
-                <artifactId>i18n-db-ai-domain</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.mzahidur</groupId>
-                <artifactId>i18n-db-ai-application</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.mzahidur</groupId>
-                <artifactId>i18n-db-ai-infrastructure</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- ── Caffeine (not in Spring Boot BOM) ─────────────────────── -->
-            <dependency>
-                <groupId>com.github.ben-manes.caffeine</groupId>
-                <artifactId>caffeine</artifactId>
-                <version>${caffeine.version}</version>
-            </dependency>
-
-            <!--
-                ── Flyway ──────────────────────────────────────────────────
-                Spring Boot's BOM manages flyway-core but lags on vendor
-                modules. Pin all four explicitly so versions stay aligned
-                with each other (mixing flyway-core 12.x with an older
-                vendor module is a common source of runtime errors).
-            -->
-            <dependency>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-core</artifactId>
-                <version>${flyway.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-mysql</artifactId>
-                <version>${flyway.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-database-oracle</artifactId>
-                <version>${flyway.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-database-postgresql</artifactId>
-                <version>${flyway.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.flywaydb</groupId>
-                <artifactId>flyway-sqlserver</artifactId>
-                <version>${flyway.version}</version>
-            </dependency>
-
-            <!--
-                ── LangChain4j ─────────────────────────────────────────────
-                No LangChain4j BOM is used here — pinned directly. Both
-                artifacts must share the same version.
-            -->
-            <dependency>
-                <groupId>dev.langchain4j</groupId>
-                <artifactId>langchain4j-spring-boot-starter</artifactId>
-                <version>${langchain4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.langchain4j</groupId>
-                <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
-                <version>${langchain4j.version}</version>
-            </dependency>
-
-            <!-- ── Test ──────────────────────────────────────────────────── -->
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter</artifactId>
-                <version>${junit-jupiter.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.assertj</groupId>
-                <artifactId>assertj-core</artifactId>
-                <version>${assertj.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-core</artifactId>
-                <version>${mockito.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers-bom</artifactId>
-                <version>${testcontainers.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
         </dependencies>
     </dependencyManagement>
 
-    <!-- ── Plugin Management ──────────────────────────────────────────────── -->
-    <!--
-        Declared in pluginManagement (not applied directly) so each child
-        module opts in via a bare <plugin> entry without redeclaring
-        version/configuration. Applied explicitly below under <build><plugins>
-        so all four modules get them automatically without re-declaring.
-    -->
     <build>
-        <pluginManagement>
-            <plugins>
-
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.13.0</version>
-                    <configuration>
-                        <source>${java.version}</source>
-                        <target>${java.version}</target>
-                        <encoding>UTF-8</encoding>
-                    </configuration>
-                </plugin>
-
-                <!--
-                    Plain JAR plugin — produces a thin library JAR.
-                    spring-boot-maven-plugin is deliberately NOT used here;
-                    that plugin is for runnable applications and produces
-                    fat JARs, which is wrong for a library artifact.
-                -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.4.1</version>
-                    <configuration>
-                        <archive>
-                            <manifestEntries>
-                                <Built-By>io.github.mzahidur</Built-By>
-                                <Implementation-Title>${project.artifactId}</Implementation-Title>
-                                <Implementation-Version>${project.version}</Implementation-Version>
-                            </manifestEntries>
-                        </archive>
-                    </configuration>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.2.5</version>
-                    <configuration>
-                        <useModulePath>false</useModulePath>
-                    </configuration>
-                </plugin>
-
-                <!-- Sources JAR — required for Maven Central publishing -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>3.3.1</version>
-                    <executions>
-                        <execution>
-                            <id>attach-sources</id>
-                            <goals><goal>jar-no-fork</goal></goals>
-                        </execution>
-                    </executions>
-                </plugin>
-
-                <!-- Javadoc JAR — required for Maven Central publishing -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.6.3</version>
-                    <configuration>
-                        <doclint>none</doclint>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>attach-javadocs</id>
-                            <goals><goal>jar</goal></goals>
-                        </execution>
-                    </executions>
-                </plugin>
-
-            </plugins>
-        </pluginManagement>
-
-        <!-- Apply to all child modules automatically -->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
             </plugin>
         </plugins>
     </build>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>mzahidur</id>
+            <name>Muhammad Zahidur Rahman</name>
+            <email>mzahidur.rahman@gmail.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git@github.com:mzahidur/i18n-db-ai.git</connection>
+        <developerConnection>scm:git:git@github.com:mzahidur/i18n-db-ai.git</developerConnection>
+        <url>https://github.com/mzahidur/i18n-db-ai</url>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>central</id>
+            <url>https://central.sonatype.com/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>central</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals><goal>jar-no-fork</goal></goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.7.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals><goal>jar</goal></goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.4</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals><goal>sign</goal></goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
