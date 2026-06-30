@@ -11,6 +11,12 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
+    <!--
+        Artifact ID follows the Spring Boot third-party starter naming
+        convention: {feature}-spring-boot-starter. The reserved prefix
+        spring-boot-starter-{feature} is for official Spring Boot starters
+        only.
+    -->
     <artifactId>i18n-db-ai-spring-boot-starter</artifactId>
     <packaging>jar</packaging>
 
@@ -18,30 +24,52 @@
     <description>
         Auto-configuration, property binding, and @Conditional wiring.
         Makes the library plug-and-play in Spring Boot applications.
+
+        Consumers add ONLY this dependency to their pom.xml:
+
+        &lt;dependency&gt;
+        &lt;groupId&gt;io.github.mzahidur&lt;/groupId&gt;
+        &lt;artifactId&gt;i18n-db-ai-spring-boot-starter&lt;/artifactId&gt;
+        &lt;version&gt;1.0.0&lt;/version&gt;
+        &lt;/dependency&gt;
     </description>
 
     <dependencies>
-        <!-- Internal modules -->
+
+        <!--
+            ── Internal modules ──────────────────────────────────────────
+            No <version> on any of these — resolved from parent
+            dependencyManagement, consistent with the rest of the reactor.
+        -->
         <dependency>
             <groupId>io.github.mzahidur</groupId>
             <artifactId>i18n-db-ai-domain</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.mzahidur</groupId>
             <artifactId>i18n-db-ai-application</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.mzahidur</groupId>
             <artifactId>i18n-db-ai-infrastructure</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
-        <!-- Spring Boot Auto-configuration -->
+        <!--
+            ── Spring Boot Auto-configuration ───────────────────────────
+            scope=provided — this is the single most important scope in
+            this entire reactor. The starter is the artifact host
+            applications consume DIRECTLY. If this were compile-scoped,
+            i18n-db-ai-spring-boot-starter would force its own copy of
+            spring-boot-autoconfigure onto every consumer instead of
+            relying on the host app's own Spring Boot version. The host
+            app ALWAYS brings Spring Boot itself (via its own
+            spring-boot-starter); this module only needs the API to
+            compile against.
+        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -49,12 +77,75 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Test -->
+        <!--
+            ── Configuration metadata processor ─────────────────────────
+            Generates spring-configuration-metadata.json from
+            @ConfigurationProperties classes (I18nDbProperties) at
+            compile time, merged with the hand-written
+            additional-spring-configuration-metadata.json already bundled
+            under src/main/resources/META-INF/. This is what gives host
+            application IDEs autocomplete + inline documentation for
+            every i18n.db.* property. optional=true — it is an annotation
+            processor, not a runtime dependency, and must never leak onto
+            a consumer's classpath.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ── Test ──────────────────────────────────────────────────────── -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!--
+            spring-boot-starter-data-jpa — test scope only. The
+            auto-config integration tests (I18nDbAutoConfigTest,
+            CacheAutoConfigTest, AiAutoConfigTest) load a real
+            ApplicationContext to verify @ConditionalOnMissingBean
+            wiring, which requires a JPA repository + DataSource to
+            exist for I18nDbAutoConfig.translationRepositoryPort() to
+            construct successfully.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- H2 — in-memory database backing the JPA context above. -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
+
+    <build>
+        <plugins>
+            <!--
+                Configuration processor must run during compilation so
+                that additional-spring-configuration-metadata.json is
+                merged correctly and the result is packaged into this
+                module's JAR, where consuming IDEs read it from.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                            <version>${spring-boot.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

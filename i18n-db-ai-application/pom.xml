@@ -21,14 +21,18 @@
     </description>
 
     <dependencies>
-        <!-- Only domain layer allowed per Clean Architecture rules -->
+
+        <!--
+            Only domain layer allowed per Clean Architecture rules.
+            No <version> here — resolved from parent dependencyManagement,
+            consistent with how every other module references siblings.
+        -->
         <dependency>
             <groupId>io.github.mzahidur</groupId>
             <artifactId>i18n-db-ai-domain</artifactId>
-            <version>${project.version}</version>
         </dependency>
 
-        <!-- Test dependencies -->
+        <!-- ── Test ──────────────────────────────────────────────────────── -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -39,6 +43,19 @@
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <!--
+            mockito-core — required to mock TranslationRepositoryPort,
+            AiTranslationPort, CachePort, CacheKeyResolver, etc. when
+            unit-testing DbTranslationProvider, AiTranslationProvider,
+            PropertiesTranslationProvider, TranslationChain, and
+            TranslationApplicationService in isolation.
+        -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>
