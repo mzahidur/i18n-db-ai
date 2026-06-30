@@ -1,4 +1,4 @@
-package io.github.mzahidur.i18n.application.service;
+package io.github.mzahidur.i18n.application.service.provider;
 
 import java.util.Locale;
 import java.util.Optional;

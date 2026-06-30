@@ -1,4 +1,4 @@
-package io.github.mzahidur.i18n.application.service;
+package io.github.mzahidur.i18n.application.service.cache;
 
 import io.github.mzahidur.i18n.domain.port.CacheKeyResolver;
 

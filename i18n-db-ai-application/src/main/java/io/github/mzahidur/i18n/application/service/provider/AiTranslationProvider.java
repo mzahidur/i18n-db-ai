@@ -1,4 +1,4 @@
-package io.github.mzahidur.i18n.application.service;
+package io.github.mzahidur.i18n.application.service.provider;
 
 import io.github.mzahidur.i18n.domain.model.TranslationSource;
 import io.github.mzahidur.i18n.domain.port.AiTranslationPort;

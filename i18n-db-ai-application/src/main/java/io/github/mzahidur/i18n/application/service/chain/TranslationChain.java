@@ -1,6 +1,6 @@
-package io.github.mzahidur.i18n.application.service;
+package io.github.mzahidur.i18n.application.service.chain;
 
-import io.github.mzahidur.i18n.domain.exception.TranslationNotFoundException;
+import io.github.mzahidur.i18n.domain.exception.TranslationException;
 
 import java.util.Comparator;
 import java.util.List;
@@ -63,7 +63,8 @@ public class TranslationChain {
             }
         }
 
-        throw new TranslationNotFoundException(code, locale);
+        throw new TranslationException.TranslationNotFoundException(
+                code, locale.toString(), null);
     }
 
     /**
