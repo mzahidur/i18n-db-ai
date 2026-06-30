@@ -1,4 +1,4 @@
-package io.github.mzahidur.i18n.infra.adapter;
+package io.github.mzahidur.i18n.infra.adapter.jpa;
 
 import io.github.mzahidur.i18n.domain.model.TranslationSource;
 import io.github.mzahidur.i18n.domain.port.TranslationRepositoryPort;
