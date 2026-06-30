@@ -2,10 +2,10 @@ package io.github.mzahidur.i18n.starter.config;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.github.mzahidur.i18n.domain.port.CacheKeyResolver;
 import io.github.mzahidur.i18n.domain.port.CachePort;
-import io.github.mzahidur.i18n.infra.cache.CaffeineCacheAdapter;
-import io.github.mzahidur.i18n.infra.cache.RedisCacheAdapter;
+import io.github.mzahidur.i18n.infra.adapter.cache.CaffeineCacheAdapter;
+import io.github.mzahidur.i18n.infra.adapter.cache.RedisCacheAdapter;
+import io.github.mzahidur.i18n.starter.properties.I18nDbProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,6 +14,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Auto-configuration for the {@link CachePort} binding.
@@ -39,7 +41,7 @@ public class CacheAutoConfig {
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(Cache.class)
     @ConditionalOnProperty(prefix = "i18n.db.cache", name = "type",
-                           havingValue = "caffeine", matchIfMissing = true)
+            havingValue = "caffeine", matchIfMissing = true)
     static class CaffeineConfig {
 
         @Bean
@@ -61,7 +63,7 @@ public class CacheAutoConfig {
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(StringRedisTemplate.class)
     @ConditionalOnProperty(prefix = "i18n.db.cache", name = "type",
-                           havingValue = "redis")
+            havingValue = "redis")
     static class RedisConfig {
 
         @Bean
@@ -74,7 +76,8 @@ public class CacheAutoConfig {
     }
 
     // -------------------------------------------------------------------------
-    // No-op fallback
+    // No-op fallback (default when neither Caffeine nor Redis is on the
+    // classpath, or when i18n.db.cache.type=none)
     // -------------------------------------------------------------------------
 
     @Bean
@@ -83,15 +86,21 @@ public class CacheAutoConfig {
         return new NoOpCacheAdapter();
     }
 
-    // -------------------------------------------------------------------------
-    // No-op inner implementation (avoids a separate file for a trivial class)
-    // -------------------------------------------------------------------------
-
+    /**
+     * Inner no-op implementation of the full {@link CachePort} contract.
+     * Kept as a private nested class rather than a separate infra file since
+     * it has no state, no dependencies, and exists purely as the safe
+     * fallback when no real cache backend is configured.
+     */
     static class NoOpCacheAdapter implements CachePort {
-        @Override public java.util.Optional<String> get(String key)          { return java.util.Optional.empty(); }
-        @Override public void put(String key, String value)                  { /* no-op */ }
-        @Override public void evict(String key)                              { /* no-op */ }
-        @Override public void evictByCodePrefix(String codePrefix)           { /* no-op */ }
-        @Override public void evictAll()                                     { /* no-op */ }
+        @Override public Optional<String> get(String key)                  { return Optional.empty(); }
+        @Override public void put(String key, String value)                { /* no-op */ }
+        @Override public void put(String key, String value, Duration ttl)  { /* no-op */ }
+        @Override public void evict(String key)                            { /* no-op */ }
+        @Override public void evictByPrefix(String keyPrefix)              { /* no-op */ }
+        @Override public void evictAll()                                   { /* no-op */ }
+        @Override public Set<String> keys()                                { return Set.of(); }
+        @Override public long size()                                       { return 0L; }
+        @Override public String backendName()                              { return "noop"; }
     }
 }

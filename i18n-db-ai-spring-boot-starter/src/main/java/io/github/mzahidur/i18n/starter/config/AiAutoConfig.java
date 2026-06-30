@@ -2,9 +2,9 @@ package io.github.mzahidur.i18n.starter.config;
 
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import io.github.mzahidur.i18n.domain.port.AiTranslationPort;
-import io.github.mzahidur.i18n.infra.ai.LangChain4jTranslationService;
-import io.github.mzahidur.i18n.infra.ai.NoOpAiTranslationService;
-import io.github.mzahidur.i18n.infra.ai.SpringAiTranslationService;
+import io.github.mzahidur.i18n.infra.adapter.ai.LangChain4jTranslationService;
+import io.github.mzahidur.i18n.infra.adapter.ai.NoOpAiTranslationService;
+import io.github.mzahidur.i18n.infra.adapter.ai.SpringAiTranslationService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -22,11 +22,15 @@ import org.springframework.context.annotation.Configuration;
  *   <li>{@code none} / absent / AI disabled — {@link NoOpAiTranslationService} (safe default)</li>
  * </ul>
  *
+ * <p>This class only constructs provider implementations and never calls
+ * {@link AiTranslationPort#translate} directly, so it is unaffected by the
+ * {@code translate(sourceText, sourceLocale, targetLocale, context)} signature
+ * used in the current port — that contract is exercised inside
+ * {@code AiTranslationProvider} (application layer), not here.</p>
+ *
  * <p>Each provider block is guarded by both a {@code @ConditionalOnClass} (the
  * provider library must be on the classpath) and a {@code @ConditionalOnProperty}
- * (the host application must explicitly opt in).  This ensures that having Spring
- * AI on the classpath for another purpose does not accidentally activate AI
- * translation.</p>
+ * (the host application must explicitly opt in).</p>
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(prefix = "i18n.db", name = "enabled", havingValue = "true", matchIfMissing = true)

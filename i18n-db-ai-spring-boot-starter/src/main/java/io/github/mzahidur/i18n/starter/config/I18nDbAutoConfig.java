@@ -1,13 +1,14 @@
 package io.github.mzahidur.i18n.starter.config;
 
-import io.github.mzahidur.i18n.application.service.provider.AiTranslationProvider;
-import io.github.mzahidur.i18n.application.service.provider.DbTranslationProvider;
-import io.github.mzahidur.i18n.application.service.provider.PropertiesTranslationProvider;
-import io.github.mzahidur.i18n.application.service.provider.TranslationProvider;
+import io.github.mzahidur.i18n.application.service.TranslationApplicationService;
 import io.github.mzahidur.i18n.application.service.cache.DefaultCacheKeyResolver;
 import io.github.mzahidur.i18n.application.service.cache.TenantAwareCacheKeyResolver;
 import io.github.mzahidur.i18n.application.service.cache.TranslationCacheManager;
 import io.github.mzahidur.i18n.application.service.chain.TranslationChain;
+import io.github.mzahidur.i18n.application.service.provider.AiTranslationProvider;
+import io.github.mzahidur.i18n.application.service.provider.DbTranslationProvider;
+import io.github.mzahidur.i18n.application.service.provider.PropertiesTranslationProvider;
+import io.github.mzahidur.i18n.application.service.provider.TranslationProvider;
 import io.github.mzahidur.i18n.domain.port.AiTranslationPort;
 import io.github.mzahidur.i18n.domain.port.CacheKeyResolver;
 import io.github.mzahidur.i18n.domain.port.CachePort;
@@ -17,8 +18,10 @@ import io.github.mzahidur.i18n.domain.port.TranslationRepositoryPort;
 import io.github.mzahidur.i18n.infra.adapter.jpa.I18nMessageJpaRepository;
 import io.github.mzahidur.i18n.infra.adapter.jpa.JpaTranslationRepositoryAdapter;
 import io.github.mzahidur.i18n.infra.messaging.DatabaseMessageSource;
+import io.github.mzahidur.i18n.starter.properties.I18nDbProperties;
 import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,10 +32,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.lang.Nullable;
 
 import javax.sql.DataSource;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -94,7 +97,7 @@ public class I18nDbAutoConfig {
     @Bean
     @ConditionalOnMissingBean(CacheKeyResolver.class)
     public CacheKeyResolver cacheKeyResolver(I18nDbProperties properties,
-                                              BeanFactory beanFactory) {
+                                             BeanFactory beanFactory) {
         String strategy = properties.getCache().getKeyResolver();
 
         return switch (strategy) {
@@ -130,8 +133,8 @@ public class I18nDbAutoConfig {
     @Bean("aiTranslationProvider")
     @ConditionalOnMissingBean(name = "aiTranslationProvider")
     public TranslationProvider aiTranslationProvider(AiTranslationPort aiPort,
-                                                      TranslationRepositoryPort repository,
-                                                      I18nDbProperties properties) {
+                                                     TranslationRepositoryPort repository,
+                                                     I18nDbProperties properties) {
         return new AiTranslationProvider(aiPort, repository, properties.getAi().isStoreResult());
     }
 
@@ -148,8 +151,8 @@ public class I18nDbAutoConfig {
     @Bean
     @ConditionalOnMissingBean(TranslationApplicationService.class)
     public TranslationApplicationService translationApplicationService(TranslationChain chain,
-                                                                        CachePort cachePort,
-                                                                        CacheKeyResolver keyResolver) {
+                                                                       CachePort cachePort,
+                                                                       CacheKeyResolver keyResolver) {
         return new TranslationApplicationService(chain, cachePort, keyResolver);
     }
 
@@ -160,7 +163,7 @@ public class I18nDbAutoConfig {
     @Bean
     @ConditionalOnMissingBean(TranslationCacheManager.class)
     public TranslationCacheManager translationCacheManager(CachePort cachePort,
-                                                            CacheKeyResolver keyResolver) {
+                                                           CacheKeyResolver keyResolver) {
         return new TranslationCacheManager(cachePort, keyResolver);
     }
 
@@ -173,7 +176,7 @@ public class I18nDbAutoConfig {
     @ConditionalOnMissingBean(name = "databaseMessageSource")
     public MessageSource databaseMessageSource(
             TranslationApplicationService service,
-            @Autowired(required = false) TenantIdResolver tenantIdResolver) {
+            @Autowired(required = false) @Nullable TenantIdResolver tenantIdResolver) {
         return new DatabaseMessageSource(service, tenantIdResolver);
     }
 
@@ -218,13 +221,21 @@ public class I18nDbAutoConfig {
         }
     }
 
+    /**
+     * Maps a resolved vendor to its Flyway classpath location.
+     *
+     * <p>Per the actual project layout: vendor-specific scripts live in
+     * {@code db/migration/<vendor>/}; the ANSI/H2 fallback script lives
+     * directly at the {@code db/migration} root (no {@code common/}
+     * subfolder).</p>
+     */
     private String vendorToLocation(String vendor) {
         return switch (vendor) {
             case "mysql"      -> "classpath:db/migration/mysql";
             case "oracle"     -> "classpath:db/migration/oracle";
             case "postgresql" -> "classpath:db/migration/postgresql";
             case "sqlserver"  -> "classpath:db/migration/sqlserver";
-            default           -> "classpath:db/migration/common";
+            default           -> "classpath:db/migration/common";  // root = ANSI / H2
         };
     }
 }

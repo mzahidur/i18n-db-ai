@@ -161,7 +161,7 @@ public class I18nDbProperties {
          *   <li>{@code oracle}      — {@code db/migration/oracle/}</li>
          *   <li>{@code postgresql}  — {@code db/migration/postgresql/}</li>
          *   <li>{@code sqlserver}   — {@code db/migration/sqlserver/}</li>
-         *   <li>{@code h2}          — {@code db/migration/h2/}</li>
+         *   <li>{@code h2}          — {@code db/migration/} (root / ANSI fallback)</li>
          * </ul>
          */
         private String vendor = "auto";
@@ -198,9 +198,9 @@ public class I18nDbProperties {
     // -------------------------------------------------------------------------
     // Nested: MessageSourceProperties
     // -------------------------------------------------------------------------
-    // NOTE: Deliberately NOT named "Properties" — java.util.Properties is a
-    // core JDK class and a nested class of the same simple name creates
-    // ambiguity for both the compiler and IDE tooling. Renamed for clarity.
+    // Deliberately NOT named "Properties" — java.util.Properties is a core JDK
+    // class and a nested class of the same simple name creates ambiguity for
+    // both the compiler and IDE tooling.
 
     public static class MessageSourceProperties {
 
