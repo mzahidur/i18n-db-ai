@@ -1,5 +1,9 @@
 package io.github.mzahidur.i18n.application.service.chain;
 
+import io.github.mzahidur.i18n.application.service.provider.AiTranslationProvider;
+import io.github.mzahidur.i18n.application.service.provider.DbTranslationProvider;
+import io.github.mzahidur.i18n.application.service.provider.PropertiesTranslationProvider;
+import io.github.mzahidur.i18n.application.service.provider.TranslationProvider;
 import io.github.mzahidur.i18n.domain.exception.TranslationException;
 
 import java.util.Comparator;
@@ -14,7 +18,7 @@ import java.util.Optional;
  * <p>Iterates over all registered {@link TranslationProvider} instances in
  * ascending {@link TranslationProvider#getOrder()} order and returns the first
  * non-empty result.  If no provider can fulfil the request, a
- * {@link TranslationNotFoundException} is thrown.</p>
+ * {@link TranslationException.TranslationNotFoundException} is thrown.</p>
  *
  * <p>This class is intentionally stateless beyond the immutable provider list —
  * it is safe for concurrent use without synchronisation.</p>
@@ -50,7 +54,7 @@ public class TranslationChain {
      * @param code   message code
      * @param locale target locale
      * @return the resolved translation string
-     * @throws TranslationNotFoundException if no provider could supply a translation
+     * @throws TranslationException.TranslationNotFoundException if no provider could supply a translation
      */
     public String resolve(String code, Locale locale) {
         Objects.requireNonNull(code, "code must not be null");

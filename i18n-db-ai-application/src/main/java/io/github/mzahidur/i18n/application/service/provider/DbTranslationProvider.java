@@ -1,5 +1,6 @@
 package io.github.mzahidur.i18n.application.service.provider;
 
+import io.github.mzahidur.i18n.domain.model.I18nMessage;
 import io.github.mzahidur.i18n.domain.port.TranslationRepositoryPort;
 
 import java.util.Locale;
@@ -12,6 +13,12 @@ import java.util.Optional;
  * <p>Delegates to {@link TranslationRepositoryPort} for a fast DB lookup.
  * Returns {@link Optional#empty()} when the row does not exist, leaving the
  * chain to continue to the next provider.</p>
+ *
+ * <p>Operates in single-tenant mode ({@code tenantId = null}) — this matches
+ * {@link TranslationChain}'s current two-argument {@code resolve(code, locale)}
+ * contract. Multi-tenant chains should be wired with a tenant-aware variant
+ * once {@link TranslationChain} is extended to carry tenant context end to
+ * end.</p>
  */
 public class DbTranslationProvider implements TranslationProvider {
 
@@ -26,15 +33,16 @@ public class DbTranslationProvider implements TranslationProvider {
     /**
      * {@inheritDoc}
      *
-     * <p>Queries {@code i18n_messages} for an exact ({@code code}, {@code locale}) match.
-     * If the locale has a country/variant, the lookup falls back automatically to the
-     * language-only root locale via the repository contract.</p>
+     * <p>Queries {@code i18n_messages} for an exact ({@code code}, {@code locale})
+     * match via {@link TranslationRepositoryPort#findByCodeAndLocale(String, String, String)}.</p>
      */
     @Override
     public Optional<String> resolve(String code, Locale locale) {
         Objects.requireNonNull(code, "code must not be null");
         Objects.requireNonNull(locale, "locale must not be null");
-        return repository.findTranslation(code, locale);
+
+        return repository.findByCodeAndLocale(code, locale.toString(), null)
+                .map(I18nMessage::getMessage);
     }
 
     @Override

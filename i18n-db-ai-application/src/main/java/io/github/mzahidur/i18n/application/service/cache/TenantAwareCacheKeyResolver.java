@@ -21,6 +21,14 @@ import java.util.Objects;
  *
  * <p>If the resolved tenant ID is blank or null a fallback of {@code "_global_"}
  * is used, mirroring the behaviour of the default (single-tenant) key.</p>
+ *
+ * <p>Because the explicit {@code tenantId} parameter present on every
+ * {@link CacheKeyResolver} method takes precedence when supplied, the
+ * injected {@link TenantIdResolver} is only consulted as a fallback when the
+ * caller passes {@code null} — this lets callers override the ambient
+ * tenant context explicitly (e.g. admin tooling acting on behalf of a
+ * specific tenant) while still defaulting to request-scoped tenant
+ * resolution in the common case.</p>
  */
 public class TenantAwareCacheKeyResolver implements CacheKeyResolver {
 
@@ -34,15 +42,52 @@ public class TenantAwareCacheKeyResolver implements CacheKeyResolver {
     }
 
     @Override
-    public String resolve(String code, Locale locale) {
+    public String resolve(String code, Locale locale, String tenantId) {
         Objects.requireNonNull(code, "code must not be null");
         Objects.requireNonNull(locale, "locale must not be null");
 
-        String tenantId = tenantIdResolver.currentTenantId();
-        if (tenantId == null || tenantId.isBlank()) {
-            tenantId = FALLBACK_TENANT;
+        String effectiveTenant = effectiveTenantId(tenantId);
+        return effectiveTenant + SEPARATOR + code + SEPARATOR + locale;
+    }
+
+    @Override
+    public String codePrefix(String code, String tenantId) {
+        Objects.requireNonNull(code, "code must not be null");
+
+        String effectiveTenant = effectiveTenantId(tenantId);
+        return effectiveTenant + SEPARATOR + code + SEPARATOR;
+    }
+
+    @Override
+    public String localePrefix(Locale locale, String tenantId) {
+        Objects.requireNonNull(locale, "locale must not be null");
+
+        // No code segment precedes locale in this key shape, so a
+        // locale-only prefix within a tenant cannot be expressed as a
+        // leading substring (tenant:CODE:locale — the code sits between
+        // tenant and locale). Returning the tenant-only prefix is the
+        // most useful contract-compliant approximation: it narrows
+        // eviction to the tenant, even though it cannot narrow further
+        // to a single locale across all codes.
+        return effectiveTenantId(tenantId) + SEPARATOR;
+    }
+
+    @Override
+    public String tenantPrefix(String tenantId) {
+        return effectiveTenantId(tenantId) + SEPARATOR;
+    }
+
+    // ── Internal helpers ─────────────────────────────────────────────────────
+
+    private String effectiveTenantId(String explicitTenantId) {
+        if (explicitTenantId != null && !explicitTenantId.isBlank()) {
+            return explicitTenantId;
         }
 
-        return tenantId + SEPARATOR + code + SEPARATOR + locale;
+        String resolved = tenantIdResolver.currentTenantId();
+        if (resolved == null || resolved.isBlank()) {
+            return FALLBACK_TENANT;
+        }
+        return resolved;
     }
 }

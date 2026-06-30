@@ -1,5 +1,7 @@
 package io.github.mzahidur.i18n.application.service;
 
+import io.github.mzahidur.i18n.application.service.chain.TranslationChain;
+import io.github.mzahidur.i18n.domain.exception.TranslationException;
 import io.github.mzahidur.i18n.domain.port.CacheKeyResolver;
 import io.github.mzahidur.i18n.domain.port.CachePort;
 
@@ -30,6 +32,11 @@ import java.util.Optional;
  * <h3>Dependency rule</h3>
  * <p>This class MUST NOT import any Spring, JPA, or infrastructure class.
  * It depends only on domain ports and application-layer siblings.</p>
+ *
+ * <h3>Tenancy</h3>
+ * <p>All public methods accept a {@code tenantId} parameter. Pass {@code null}
+ * for single-tenant deployments — this is consistent with the domain ports'
+ * {@code (code, locale, tenantId)} contract throughout the stack.</p>
  */
 public class TranslationApplicationService {
 
@@ -56,17 +63,18 @@ public class TranslationApplicationService {
      * <p>On a cache miss the full chain is walked (DB → Properties → AI).
      * A successful result is written back to the cache before returning.</p>
      *
-     * @param code   message code
-     * @param locale target locale
+     * @param code     message code
+     * @param locale   target locale
+     * @param tenantId tenant identifier; {@code null} for single-tenant
      * @return the resolved translation string
-     * @throws io.github.mzahidur.i18n.domain.exception.TranslationNotFoundException
+     * @throws TranslationException.TranslationNotFoundException
      *         if no provider in the chain could supply a translation
      */
-    public String getMessage(String code, Locale locale) {
+    public String getMessage(String code, Locale locale, String tenantId) {
         Objects.requireNonNull(code, "code must not be null");
         Objects.requireNonNull(locale, "locale must not be null");
 
-        String cacheKey = keyResolver.resolve(code, locale);
+        String cacheKey = keyResolver.resolve(code, locale, tenantId);
 
         // 1. Cache read
         Optional<String> cached = cache.get(cacheKey);
@@ -84,21 +92,46 @@ public class TranslationApplicationService {
     }
 
     /**
+     * Convenience overload for single-tenant deployments.
+     *
+     * @param code   message code
+     * @param locale target locale
+     * @return the resolved translation string
+     * @throws TranslationException.TranslationNotFoundException
+     *         if no provider in the chain could supply a translation
+     */
+    public String getMessage(String code, Locale locale) {
+        return getMessage(code, locale, null);
+    }
+
+    /**
      * Check whether a translation exists without throwing on a miss.
      *
      * <p>Useful for conditional rendering in view templates.  Internally walks
      * the full resolution path — the result is cached as a side-effect.</p>
+     *
+     * @param code     message code
+     * @param locale   target locale
+     * @param tenantId tenant identifier; {@code null} for single-tenant
+     * @return {@code true} if a translation can be resolved; {@code false} otherwise
+     */
+    public boolean hasMessage(String code, Locale locale, String tenantId) {
+        try {
+            getMessage(code, locale, tenantId);
+            return true;
+        } catch (TranslationException.TranslationNotFoundException ex) {
+            return false;
+        }
+    }
+
+    /**
+     * Convenience overload for single-tenant deployments.
      *
      * @param code   message code
      * @param locale target locale
      * @return {@code true} if a translation can be resolved; {@code false} otherwise
      */
     public boolean hasMessage(String code, Locale locale) {
-        try {
-            getMessage(code, locale);
-            return true;
-        } catch (io.github.mzahidur.i18n.domain.exception.TranslationNotFoundException ex) {
-            return false;
-        }
+        return hasMessage(code, locale, null);
     }
 }
