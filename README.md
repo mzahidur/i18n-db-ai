@@ -32,7 +32,7 @@ A plug-and-play Spring Boot starter that provides fast, database-backed internat
 <dependency>
     <groupId>io.github.mzahidur</groupId>
     <artifactId>i18n-db-ai-spring-boot-starter</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
 

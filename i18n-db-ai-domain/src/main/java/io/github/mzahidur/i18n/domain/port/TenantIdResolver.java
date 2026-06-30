@@ -11,10 +11,10 @@ package io.github.mzahidur.i18n.domain.port;
  * <p>Activated when {@code i18n.db.tenant.enabled=true}.  The bean name of
  * the implementing class is supplied via {@code i18n.db.tenant.resolver}.</p>
  *
- * <h3>Contract</h3>
+ * <p>Contract</p>
  * <ul>
  *   <li>Must never throw — return {@code null} or blank when no tenant context
- *       is available; {@link io.github.mzahidur.i18n.application.service.TenantAwareCacheKeyResolver}
+ *       is available; see io.github.mzahidur.i18n.application.service.TenantAwareCacheKeyResolver
  *       falls back to {@code "_global_"} in that case.</li>
  *   <li>Must be safe for concurrent use (typically backed by a {@code ThreadLocal}).</li>
  * </ul>
