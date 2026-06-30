@@ -21,52 +21,38 @@
     </description>
 
     <dependencies>
-
-        <!-- ── Internal layers ───────────────────────────────────────────── -->
-        <!--
-            Declared explicitly even though i18n-db-ai-application already
-            depends on domain transitively. Infrastructure classes (JPA
-            entities, repository adapters, exception handling) reference
-            domain types directly — relying on transitive resolution for a
-            hard compile-time dependency is fragile and against Maven
-            best practice.
-        -->
+        <!-- Internal layers -->
         <dependency>
             <groupId>io.github.mzahidur</groupId>
             <artifactId>i18n-db-ai-domain</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.github.mzahidur</groupId>
             <artifactId>i18n-db-ai-application</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
-        <!-- ── Spring Boot — provided by host application ───────────────── -->
+        <!-- Spring Boot — provided by host -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
             <scope>provided</scope>
         </dependency>
-
-        <!--
-            spring-context — DatabaseMessageSource implements Spring's
-            MessageSource interface directly. Declared explicitly rather
-            than relying on it arriving transitively via
-            spring-boot-starter-data-jpa.
-        -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
             <scope>provided</scope>
         </dependency>
 
-        <!-- ── JPA / Persistence ─────────────────────────────────────────── -->
+        <!-- JPA -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
             <scope>provided</scope>
         </dependency>
 
-        <!-- ── Flyway ────────────────────────────────────────────────────── -->
+        <!-- Flyway -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
@@ -87,18 +73,13 @@
             <artifactId>flyway-database-oracle</artifactId>
             <optional>true</optional>
         </dependency>
-        <!--
-            flyway-database-postgresql — was missing. Without it, Flyway
-            cannot recognize a postgresql:// JDBC URL at runtime even
-            though db/migration/postgresql/ scripts are bundled.
-        -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
             <optional>true</optional>
         </dependency>
 
-        <!-- ── Cache ─────────────────────────────────────────────────────── -->
+        <!-- Cache -->
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
@@ -110,19 +91,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- ── AI Providers ──────────────────────────────────────────────── -->
-        <!--
-            All AI provider dependencies are optional=true. The host
-            application opts into a specific provider by adding that
-            dependency themselves — none of these should be forced onto
-            every consumer of the starter.
-        -->
-        <!--
-            Artifact ID renamed by Spring AI in their 1.0.0-RC era —
-            spring-ai-openai-spring-boot-starter no longer exists.
-            Model starters now follow the pattern:
-            spring-ai-{model}-spring-boot-starter -> spring-ai-starter-model-{model}
-        -->
+        <!-- AI Providers -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-openai</artifactId>
@@ -139,13 +108,13 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- ── Logging ───────────────────────────────────────────────────── -->
+        <!-- Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
-        <!-- ── Test ──────────────────────────────────────────────────────── -->
+        <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -156,7 +125,6 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
 </project>

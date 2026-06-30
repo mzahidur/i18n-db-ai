@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -14,28 +15,30 @@ import java.util.Optional;
  *
  * <p>Active when {@code i18n.db.ai.provider=spring-ai} and the
  * {@code spring-ai-openai-spring-boot-starter} (or any other Spring AI
- * provider starter) is on the classpath.  The {@link ChatClient} bean is
+ * provider starter) is on the classpath. The {@link ChatClient} bean is
  * supplied by Spring AI's own auto-configuration and injected into this
  * adapter by {@code AiAutoConfig}.</p>
  *
  * <h3>Prompt design</h3>
- * <p>The prompt asks for a plain translation with no surrounding explanation.
- * The model is instructed to respond with the translated string only, making
- * the response safe to store directly without post-processing.</p>
+ * <p>Translates {@code sourceText} from {@code sourceLocale} into
+ * {@code targetLocale}. Optional {@code context} hints (e.g.
+ * {@code "domain" -> "ui_label"}, {@code "tone" -> "formal"}) are appended
+ * to the prompt when present, letting callers disambiguate short UI strings.
+ * The model is instructed to return only the translated text.</p>
  *
  * <h3>Error handling</h3>
- * <p>Any exception from the Spring AI call is caught and logged; the method
- * returns {@link Optional#empty()} so the chain degrades gracefully rather
- * than propagating an API failure to the end user.</p>
+ * <p>Any exception is caught and logged; the method returns
+ * {@link Optional#empty()} so the chain degrades gracefully rather than
+ * propagating an API failure.</p>
  */
 public class SpringAiTranslationService implements AiTranslationPort {
 
     private static final Logger log = LoggerFactory.getLogger(SpringAiTranslationService.class);
 
-    private static final String PROMPT_TEMPLATE =
-            "Translate the following UI message key into %s (%s).\n" +
+    private static final String BASE_PROMPT =
+            "Translate the following text from %s (%s) into %s (%s).\n" +
             "Respond with only the translated text — no explanation, no quotes, no punctuation changes.\n\n" +
-            "Message key: \"%s\"";
+            "Text: \"%s\"";
 
     private final ChatClient chatClient;
 
@@ -44,16 +47,16 @@ public class SpringAiTranslationService implements AiTranslationPort {
     }
 
     @Override
-    public Optional<String> translate(String code, Locale locale) {
-        Objects.requireNonNull(code, "code must not be null");
-        Objects.requireNonNull(locale, "locale must not be null");
+    public Optional<String> translate(String sourceText,
+                                       Locale sourceLocale,
+                                       Locale targetLocale,
+                                       Map<String, String> context) {
+        Objects.requireNonNull(sourceText, "sourceText must not be null");
+        Objects.requireNonNull(sourceLocale, "sourceLocale must not be null");
+        Objects.requireNonNull(targetLocale, "targetLocale must not be null");
+        Objects.requireNonNull(context, "context must not be null (use Map.of() for none)");
 
-        String prompt = String.format(
-                PROMPT_TEMPLATE,
-                locale.getDisplayLanguage(Locale.ENGLISH),
-                locale,
-                code
-        );
+        String prompt = buildPrompt(sourceText, sourceLocale, targetLocale, context);
 
         try {
             String response = chatClient.prompt()
@@ -62,18 +65,52 @@ public class SpringAiTranslationService implements AiTranslationPort {
                     .content();
 
             if (response == null || response.isBlank()) {
-                log.warn("Spring AI returned blank response for code='{}' locale='{}'", code, locale);
+                log.warn("Spring AI returned blank response for sourceLocale='{}' targetLocale='{}'",
+                         sourceLocale, targetLocale);
                 return Optional.empty();
             }
 
             String translation = response.strip();
-            log.debug("Spring AI translated code='{}' locale='{}' → '{}'", code, locale, translation);
+            log.debug("Spring AI translated '{}' ({} → {}) → '{}'",
+                      sourceText, sourceLocale, targetLocale, translation);
             return Optional.of(translation);
 
         } catch (Exception ex) {
-            log.error("Spring AI translation failed for code='{}' locale='{}': {}",
-                      code, locale, ex.getMessage(), ex);
+            log.error("Spring AI translation failed (sourceLocale='{}' targetLocale='{}'): {}",
+                      sourceLocale, targetLocale, ex.getMessage(), ex);
             return Optional.empty();
         }
+    }
+
+    @Override
+    public boolean isAvailable() {
+        return true;
+    }
+
+    @Override
+    public String providerName() {
+        return "spring-ai";
+    }
+
+    // -------------------------------------------------------------------------
+    // Internal helpers
+    // -------------------------------------------------------------------------
+
+    private String buildPrompt(String sourceText, Locale sourceLocale, Locale targetLocale,
+                               Map<String, String> context) {
+        String prompt = String.format(
+                BASE_PROMPT,
+                sourceLocale.getDisplayLanguage(Locale.ENGLISH), sourceLocale,
+                targetLocale.getDisplayLanguage(Locale.ENGLISH), targetLocale,
+                sourceText
+        );
+
+        if (!context.isEmpty()) {
+            StringBuilder hints = new StringBuilder("\n\nAdditional context:");
+            context.forEach((k, v) -> hints.append("\n- ").append(k).append(": ").append(v));
+            prompt += hints;
+        }
+
+        return prompt;
     }
 }
